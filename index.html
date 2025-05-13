@@ -5,6 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Калькулятор перехідних піддонів</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if("serviceWorker" in navigator){
+      navigator.serviceWorker.register("service-worker.js");
+    }
+  </script>
   <style>
     body { font-family: sans-serif; padding: 15px; background: #f0f0f0; }
     h2 { text-align: center; }
@@ -14,34 +20,13 @@
     }
     .inline { display: flex; gap: 10px; align-items: center; }
     .inline input { flex: 1; }
-    .save-btn {
-      width: 45px;
-      height: 45px;
-      background-color: #007bff;
-      border: none;
-      color: white;
-      font-size: 22px;
-      padding: 0;
-      cursor: pointer;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .save-btn, .delete-btn {
+      width: 45px; height: 45px; border: none; color: white; font-size: 22px;
+      padding: 0; cursor: pointer; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
     }
-    .delete-btn {
-      width: 45px;
-      height: 45px;
-      background-color: #dc3545;
-      border: none;
-      color: white;
-      font-size: 22px;
-      padding: 0;
-      cursor: pointer;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+    .save-btn { background-color: #007bff; }
+    .delete-btn { background-color: #dc3545; }
     button {
       width: 100%; margin-top: 10px; padding: 12px;
       background-color: #28a745; color: white;
@@ -55,27 +40,17 @@
     }
     .step { margin-top: 10px; }
   </style>
-<link rel="manifest" href="manifest.json">
-<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("service-worker.js");}</script>
 </head>
 <body>
 
 <h2>Калькулятор перехідних піддонів</h2>
 
-<label>Назва формату:
-  <div class="inline">
-    <input type="text" id="formatName" placeholder="Наприклад: 72г-22-182">
-    <button class="save-btn" onclick="saveFormat()">💾</button>
-  </div>
+<label>Залишок коробок з попередньої зміни:
+  <input type="number" id="previousBoxes" value="0">
 </label>
 
-<label>Оберіть збережений формат:
-  <div class="inline">
-    <select id="formatSelect" onchange="loadFormat()" style="flex:1;">
-      <option value="">-- Не обрано --</option>
-    </select>
-    <button class="delete-btn" onclick="deleteFormat()">🗑️</button>
-  </div>
+<label>План (кг):
+  <input type="number" id="planKg" step="0.01">
 </label>
 
 <label>Коробок у піддоні:
@@ -90,85 +65,17 @@
   <input type="number" id="packWeightGrams">
 </label>
 
-<label>План (кг):
-  <input type="number" id="planKg" step="0.01">
-</label>
-
 <button onclick="calculate()">Розрахувати</button>
 
 <div id="result"></div>
 
 <script>
-function saveFormat() {
-  const name = document.getElementById("formatName").value.trim();
-  const boxes = document.getElementById("boxesPerPallet").value;
-  const packs = document.getElementById("packsPerBox").value;
-  const weight = document.getElementById("packWeightGrams").value;
-
-  if (!name || !boxes || !packs || !weight) {
-    alert("Будь ласка, заповніть усі поля для збереження.");
-    return;
-  }
-
-  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
-  formats[name] = {
-    boxesPerPallet: boxes,
-    packsPerBox: packs,
-    packWeightGrams: weight
-  };
-  localStorage.setItem("formats", JSON.stringify(formats));
-  updateFormatList(name);
-  alert("Формат збережено.");
-}
-
-function deleteFormat() {
-  const selected = document.getElementById("formatSelect").value;
-  if (!selected) {
-    alert("Спочатку оберіть формат для видалення.");
-    return;
-  }
-  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
-  if (formats[selected]) {
-    if (confirm(`Видалити формат "${selected}"?`)) {
-      delete formats[selected];
-      localStorage.setItem("formats", JSON.stringify(formats));
-      updateFormatList();
-      alert("Формат видалено.");
-    }
-  }
-}
-
-function updateFormatList(selectedName = "") {
-  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
-  const select = document.getElementById("formatSelect");
-  select.innerHTML = '<option value="">-- Не обрано --</option>';
-  for (let name in formats) {
-    const option = document.createElement("option");
-    option.value = name;
-    option.textContent = name;
-    if (name === selectedName) option.selected = true;
-    select.appendChild(option);
-  }
-}
-
-function loadFormat() {
-  const selected = document.getElementById("formatSelect").value;
-  if (!selected) return;
-  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
-  const format = formats[selected];
-  if (format) {
-    document.getElementById("formatName").value = selected;
-    document.getElementById("boxesPerPallet").value = format.boxesPerPallet;
-    document.getElementById("packsPerBox").value = format.packsPerBox;
-    document.getElementById("packWeightGrams").value = format.packWeightGrams;
-  }
-}
-
 function calculate() {
   const planKg = parseFloat(document.getElementById("planKg").value);
   const boxesPerPallet = parseInt(document.getElementById("boxesPerPallet").value);
   const packsPerBox = parseInt(document.getElementById("packsPerBox").value);
   const packWeightGrams = parseFloat(document.getElementById("packWeightGrams").value);
+  const previousBoxes = parseInt(document.getElementById("previousBoxes").value) || 0;
 
   if (isNaN(planKg) || isNaN(boxesPerPallet) || isNaN(packsPerBox) || isNaN(packWeightGrams)) {
     document.getElementById("result").innerHTML = "<span style='color:red'>Заповніть усі поля для розрахунку.</span>";
@@ -179,27 +86,28 @@ function calculate() {
   const totalPacks = planKg / packWeightKg;
   const exactBoxes = totalPacks / packsPerBox;
   const fullBoxes = Math.ceil(exactBoxes);
+  const fullBoxesWithPrevious = fullBoxes + previousBoxes;
   const leftoverPacks = Math.floor(totalPacks % packsPerBox);
-  const fullPallets = Math.floor(fullBoxes / boxesPerPallet);
-  const transitionBoxes = fullBoxes % boxesPerPallet;
+  const fullPallets = Math.floor(fullBoxesWithPrevious / boxesPerPallet);
+  const transitionBoxes = fullBoxesWithPrevious % boxesPerPallet;
 
   document.getElementById("result").innerHTML = `
     <div><strong>Результат:</strong></div>
-    <div>Повних піддонів: <strong>${fullPallets}</strong></div>
+    <div>Повних піддонів (враховано залишок): <strong>${fullPallets}</strong></div>
     <div>Коробок у перехідному піддоні: <strong>${transitionBoxes}</strong></div>
     <div>Залишкових пачок: <strong>${leftoverPacks}</strong></div>
     <hr>
     <div class="step"><strong>Детальні розрахунки:</strong></div>
+    <div class="step">0. Залишок коробок з попередньої зміни: ${previousBoxes}</div>
+    <div class="step">0.1. Загальна кількість коробок з урахуванням залишку: ${fullBoxes} + ${previousBoxes} = ${fullBoxesWithPrevious}</div>
     <div class="step">1. Вага 1 пачки: ${packWeightGrams} г = ${packWeightKg.toFixed(5)} кг</div>
     <div class="step">2. Кількість пачок: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)} шт</div>
     <div class="step">3. Кількість коробок: ${totalPacks.toFixed(2)} / ${packsPerBox} = ${exactBoxes.toFixed(5)} → округлено вгору: ${fullBoxes}</div>
-    <div class="step">4. Повних піддонів: ${fullBoxes} / ${boxesPerPallet} = ${(fullBoxes / boxesPerPallet).toFixed(5)} → округлено вниз: ${fullPallets}</div>
-    <div class="step">5. Перехідний піддон: ${fullBoxes} % ${boxesPerPallet} = ${transitionBoxes} коробок</div>
+    <div class="step">4. Повних піддонів: ${fullBoxesWithPrevious} / ${boxesPerPallet} = ${(fullBoxesWithPrevious / boxesPerPallet).toFixed(5)} → округлено вниз: ${fullPallets}</div>
+    <div class="step">5. Перехідний піддон: ${fullBoxesWithPrevious} % ${boxesPerPallet} = ${transitionBoxes} коробок</div>
     <div class="step">6. Залишок пачок: ${totalPacks.toFixed(2)} % ${packsPerBox} = ${leftoverPacks} пачок</div>
   `;
 }
-
-updateFormatList();
 </script>
 
 </body>
