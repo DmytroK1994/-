@@ -217,5 +217,15 @@ function calculate() {
 window.onload = updateFormatList;
 </script>
 
+
+<script>
+  const CURRENT_VERSION = '2025-05-18-18h';
+  const lastVersion = localStorage.getItem('app_version');
+  if (lastVersion !== CURRENT_VERSION) {
+    localStorage.setItem('app_version', CURRENT_VERSION);
+    location.reload(true);
+  }
+</script>
+
 </body>
 </html>
