@@ -1,18 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Калькулятор перехідних піддонів</title>
-  <link rel="manifest" href="manifest.json">
-  <script>
-    if("serviceWorker" in navigator){
-      navigator.serviceWorker.register("service-worker.js");
-    }
-  </script>
   <style>
-    body { font-family: sans-serif; padding: 15px; background: #f0f0f0; }
+    body { font-family: sans-serif; padding: 15px; background: #f5f5f5; }
     h2 { text-align: center; }
     label { margin-top: 10px; display: block; }
     input, select {
@@ -20,10 +13,11 @@
     }
     .inline { display: flex; gap: 10px; align-items: center; }
     .inline input { flex: 1; }
-    .save-btn, .delete-btn {
-      width: 45px; height: 45px; border: none; color: white; font-size: 22px;
-      padding: 0; cursor: pointer; border-radius: 4px;
+    .icon-button {
+      width: 45px; height: 45px; border: none;
       display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 22px; color: white;
+      border-radius: 5px;
     }
     .save-btn { background-color: #007bff; }
     .delete-btn { background-color: #dc3545; }
@@ -45,13 +39,19 @@
 
 <h2>Калькулятор перехідних піддонів</h2>
 
-<label>Залишок коробок з попередньої зміни:
-  <input type="number" id="previousBoxes" value="0">
-</label>
+<label>Назва формату:</label>
+<div class="inline">
+  <input id="formatName" placeholder="Наприклад: 72г-22-182">
+  <button class="icon-button save-btn" onclick="saveFormat()">💾</button>
+</div>
 
-<label>План (кг):
-  <input type="number" id="planKg" step="0.01">
-</label>
+<label>Оберіть збережений формат:</label>
+<div class="inline">
+  <select id="savedFormats" onchange="loadFormat()">
+    <option>-- Не обрано --</option>
+  </select>
+  <button class="icon-button delete-btn" onclick="deleteFormat()">🗑️</button>
+</div>
 
 <label>Коробок у піддоні:
   <input type="number" id="boxesPerPallet">
@@ -65,49 +65,105 @@
   <input type="number" id="packWeightGrams">
 </label>
 
+<label>План (кг):
+  <input type="number" id="planKg" step="0.01">
+</label>
+
+<label>Коробок цієї зміни, які вже в перехідному піддоні:
+  <input type="number" id="transitionBoxes" value="0">
+</label>
+
 <button onclick="calculate()">Розрахувати</button>
 
 <div id="result"></div>
 
 <script>
+function saveFormat() {
+  const name = document.getElementById("formatName").value;
+  const boxes = document.getElementById("boxesPerPallet").value;
+  const packs = document.getElementById("packsPerBox").value;
+  const weight = document.getElementById("packWeightGrams").value;
+  if (!name || !boxes || !packs || !weight) {
+    alert("Заповніть усі поля та назву формату!");
+    return;
+  }
+  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
+  formats[name] = { boxes, packs, weight };
+  localStorage.setItem("formats", JSON.stringify(formats));
+  updateFormatList();
+}
+
+function loadFormat() {
+  const selected = document.getElementById("savedFormats").value;
+  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
+  if (formats[selected]) {
+    document.getElementById("formatName").value = selected;
+    document.getElementById("boxesPerPallet").value = formats[selected].boxes;
+    document.getElementById("packsPerBox").value = formats[selected].packs;
+    document.getElementById("packWeightGrams").value = formats[selected].weight;
+  }
+}
+
+function deleteFormat() {
+  const selected = document.getElementById("savedFormats").value;
+  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
+  if (formats[selected]) {
+    delete formats[selected];
+    localStorage.setItem("formats", JSON.stringify(formats));
+    updateFormatList();
+  }
+}
+
+function updateFormatList() {
+  const formats = JSON.parse(localStorage.getItem("formats") || "{}");
+  const select = document.getElementById("savedFormats");
+  select.innerHTML = '<option>-- Не обрано --</option>';
+  Object.keys(formats).forEach(name => {
+    const opt = document.createElement("option");
+    opt.text = name;
+    select.add(opt);
+  });
+}
+
 function calculate() {
   const planKg = parseFloat(document.getElementById("planKg").value);
   const boxesPerPallet = parseInt(document.getElementById("boxesPerPallet").value);
   const packsPerBox = parseInt(document.getElementById("packsPerBox").value);
   const packWeightGrams = parseFloat(document.getElementById("packWeightGrams").value);
-  const previousBoxes = parseInt(document.getElementById("previousBoxes").value) || 0;
+  const transitionBoxes = parseInt(document.getElementById("transitionBoxes").value) || 0;
 
   if (isNaN(planKg) || isNaN(boxesPerPallet) || isNaN(packsPerBox) || isNaN(packWeightGrams)) {
-    document.getElementById("result").innerHTML = "<span style='color:red'>Заповніть усі поля для розрахунку.</span>";
+    document.getElementById("result").innerHTML = "<span style='color:red'>Заповніть усі поля!</span>";
     return;
   }
 
   const packWeightKg = packWeightGrams / 1000;
   const totalPacks = planKg / packWeightKg;
-  const exactBoxes = totalPacks / packsPerBox;
-  const fullBoxes = Math.ceil(exactBoxes);
-  const fullBoxesWithPrevious = fullBoxes + previousBoxes;
+  const fullBoxes = Math.floor(totalPacks / packsPerBox);
+  const fullBoxesAfterDeduction = Math.max(fullBoxes - transitionBoxes, 0);
+  const fullPallets = Math.floor(fullBoxesAfterDeduction / boxesPerPallet);
+  const leftoverBoxes = fullBoxesAfterDeduction % boxesPerPallet;
   const leftoverPacks = Math.floor(totalPacks % packsPerBox);
-  const fullPallets = Math.floor(fullBoxesWithPrevious / boxesPerPallet);
-  const transitionBoxes = fullBoxesWithPrevious % boxesPerPallet;
 
   document.getElementById("result").innerHTML = `
     <div><strong>Результат:</strong></div>
-    <div>Повних піддонів (враховано залишок): <strong>${fullPallets}</strong></div>
-    <div>Коробок у перехідному піддоні: <strong>${transitionBoxes}</strong></div>
+    <div>Повних піддонів: <strong>${fullPallets}</strong></div>
+    <div>Коробок у перехідному піддоні: <strong>${leftoverBoxes}</strong></div>
     <div>Залишкових пачок: <strong>${leftoverPacks}</strong></div>
     <hr>
     <div class="step"><strong>Детальні розрахунки:</strong></div>
-    <div class="step">0. Залишок коробок з попередньої зміни: ${previousBoxes}</div>
-    <div class="step">0.1. Загальна кількість коробок з урахуванням залишку: ${fullBoxes} + ${previousBoxes} = ${fullBoxesWithPrevious}</div>
     <div class="step">1. Вага 1 пачки: ${packWeightGrams} г = ${packWeightKg.toFixed(5)} кг</div>
-    <div class="step">2. Кількість пачок: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)} шт</div>
-    <div class="step">3. Кількість коробок: ${totalPacks.toFixed(2)} / ${packsPerBox} = ${exactBoxes.toFixed(5)} → округлено вгору: ${fullBoxes}</div>
-    <div class="step">4. Повних піддонів: ${fullBoxesWithPrevious} / ${boxesPerPallet} = ${(fullBoxesWithPrevious / boxesPerPallet).toFixed(5)} → округлено вниз: ${fullPallets}</div>
-    <div class="step">5. Перехідний піддон: ${fullBoxesWithPrevious} % ${boxesPerPallet} = ${transitionBoxes} коробок</div>
-    <div class="step">6. Залишок пачок: ${totalPacks.toFixed(2)} % ${packsPerBox} = ${leftoverPacks} пачок</div>
+    <div class="step">2. Кількість пачок: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)}</div>
+    <div class="step">3. Кількість коробок: ${Math.floor(totalPacks)} / ${packsPerBox} = ${fullBoxes}</div>
+    <div class="step">4. Віднято коробок у перехідному піддоні: ${transitionBoxes}</div>
+    <div class="step">5. Залишилось коробок: ${fullBoxesAfterDeduction}</div>
+    <div class="step">6. Повних піддонів: ${fullBoxesAfterDeduction} / ${boxesPerPallet} = ${fullPallets}</div>
+    <div class="step">7. Перехідний піддон: ${leftoverBoxes} коробок</div>
+    <div class="step">8. Залишок пачок: ${leftoverPacks}</div>
   `;
 }
+
+window.onload = updateFormatList;
 </script>
 
 </body>
