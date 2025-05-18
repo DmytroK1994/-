@@ -1,10 +1,10 @@
 {
-  "name": "Калькулятор перехідних піддонів",
+  "name": "Калькулятор піддонів",
   "short_name": "Піддони",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#28a745",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "icon-192.png",
