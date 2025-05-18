@@ -20,8 +20,10 @@
       margin-top: 10px;
     }
     .logo {
-      width: 220px;
+      max-width: 100%;
+      width: 100%;
       height: auto;
+      display: block;
     }
     h2 {
       font-size: 22px;
@@ -88,7 +90,7 @@
 <body>
 
 <div class="header">
-  <img src="roshen-logo.jpg.png" alt="Roshen Logo" class="logo">
+  <img src="roshen-logo.jpeg" alt="Roshen Logo" class="logo">
   <h2>Калькулятор<br>перехідних піддонів</h2>
 </div>
 
@@ -115,14 +117,11 @@
 <label>Вага однієї пачки (грам):</label>
 <input type="number" id="packWeightGrams" />
 
-<label>План (кг):</label>
-<input type="number" id="planKg" step="0.01" />
-
 <label>Коробок цієї зміни, які вже в перехідному піддоні:</label>
 <input type="number" id="transitionBoxes" value="0" />
 
-<label>Пачок цієї зміни, які вже в перехідному піддоні:</label>
-<input type="number" id="transitionPacks" value="0" />
+<label>План (кг):</label>
+<input type="number" id="planKg" step="0.01" />
 
 <button onclick="calculate()">Розрахувати</button>
 
@@ -183,7 +182,6 @@ function calculate() {
   const packsPerBox = parseInt(document.getElementById("packsPerBox").value);
   const packWeightGrams = parseFloat(document.getElementById("packWeightGrams").value);
   const transitionBoxes = parseInt(document.getElementById("transitionBoxes").value) || 0;
-  const transitionPacks = parseInt(document.getElementById("transitionPacks").value) || 0;
 
   if (isNaN(planKg) || isNaN(boxesPerPallet) || isNaN(packsPerBox) || isNaN(packWeightGrams)) {
     document.getElementById("result").innerHTML = "<span style='color:red'>Заповніть усі поля!</span>";
@@ -192,13 +190,11 @@ function calculate() {
 
   const packWeightKg = packWeightGrams / 1000;
   const totalPacks = planKg / packWeightKg;
-  const adjustedPacks = totalPacks - transitionPacks;
-  const totalBoxes = adjustedPacks / packsPerBox;
-  const fullBoxes = Math.floor(totalBoxes);
-  const fullBoxesAfterDeduction = Math.max(fullBoxes - transitionBoxes, 0);
-  const fullPallets = Math.floor(fullBoxesAfterDeduction / boxesPerPallet);
-  const leftoverBoxes = fullBoxesAfterDeduction % boxesPerPallet;
-  const leftoverPacks = Math.floor(adjustedPacks % packsPerBox);
+  const totalBoxes = totalPacks / packsPerBox;
+  const totalBoxesAdjusted = totalBoxes - transitionBoxes;
+  const fullPallets = Math.floor(totalBoxesAdjusted / boxesPerPallet);
+  const leftoverBoxes = Math.round(totalBoxesAdjusted % boxesPerPallet);
+  const leftoverPacks = Math.floor(totalPacks % packsPerBox);
 
   document.getElementById("result").innerHTML = `
     <div><strong>Результат:</strong></div>
@@ -208,16 +204,13 @@ function calculate() {
     <hr>
     <div class="step"><strong>Детальні розрахунки:</strong></div>
     <div class="step">1. Вага 1 пачки: ${packWeightGrams} г = ${packWeightKg.toFixed(5)} кг</div>
-    <div class="step">2. Кількість пачок за планом: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)}</div>
-    <div class="step">3. Віднято пачок у перехідному піддоні: ${transitionPacks}</div>
-    <div class="step">4. Залишилось пачок: ${adjustedPacks.toFixed(2)}</div>
-    <div class="step">5. Кількість коробок: ${adjustedPacks.toFixed(2)} / ${packsPerBox} = ${totalBoxes.toFixed(2)}</div>
-    <div class="step">6. Повних коробок: ${fullBoxes}</div>
-    <div class="step">7. Віднято коробок у перехідному піддоні: ${transitionBoxes}</div>
-    <div class="step">8. Залишилось коробок: ${fullBoxesAfterDeduction}</div>
-    <div class="step">9. Повних піддонів: ${fullBoxesAfterDeduction} / ${boxesPerPallet} = ${fullPallets}</div>
-    <div class="step">10. Перехідний піддон: ${leftoverBoxes} коробок</div>
-    <div class="step">11. Залишок пачок: ${leftoverPacks}</div>
+    <div class="step">2. Кількість пачок: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)}</div>
+    <div class="step">3. Кількість коробок: ${totalPacks.toFixed(2)} / ${packsPerBox} = ${totalBoxes.toFixed(2)}</div>
+    <div class="step">4. Віднято коробок у перехідному піддоні: ${transitionBoxes}</div>
+    <div class="step">5. Залишилось коробок: ${totalBoxesAdjusted.toFixed(2)}</div>
+    <div class="step">6. Повних піддонів: ${Math.floor(totalBoxesAdjusted)} / ${boxesPerPallet} = ${fullPallets}</div>
+    <div class="step">7. Перехідний піддон: ${leftoverBoxes} коробок</div>
+    <div class="step">8. Залишок пачок: ${leftoverPacks}</div>
   `;
 }
 
