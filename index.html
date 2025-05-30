@@ -202,14 +202,12 @@ function calculate() {
   const totalBoxesAdjusted = totalBoxes - transitionBoxes;
   const fullPallets = Math.floor(totalBoxesAdjusted / boxesPerPallet);
   const leftoverBoxes = Math.round(totalBoxesAdjusted % boxesPerPallet);
-  const leftoverPacks = Math.floor(totalPacks % packsPerBox);
-
+  
   document.getElementById("result").innerHTML = `
     <div><strong>Результат:</strong></div>
     <div>Повних піддонів: <strong>${fullPallets}</strong></div>
     <div>Коробок у перехідному піддоні: <strong>${leftoverBoxes}</strong></div>
-    <div>Залишкових пачок: <strong>${leftoverPacks}</strong></div>
-    <hr>
+        <hr>
     <div class="step"><strong>Детальні розрахунки:</strong></div>
     <div class="step">1. Вага 1 пачки: ${packWeightGrams} г = ${packWeightKg.toFixed(5)} кг</div>
     <div class="step">2. Кількість пачок: ${planKg} / ${packWeightKg.toFixed(5)} = ${totalPacks.toFixed(2)}</div>
@@ -218,8 +216,7 @@ function calculate() {
     <div class="step">5. Залишилось коробок: ${totalBoxesAdjusted.toFixed(2)}</div>
     <div class="step">6. Повних піддонів: ${Math.floor(totalBoxesAdjusted)} / ${boxesPerPallet} = ${fullPallets}</div>
     <div class="step">7. Перехідний піддон: ${leftoverBoxes} коробок</div>
-    <div class="step">8. Залишок пачок: ${leftoverPacks}</div>
-  `;
+      `;
 }
 
 window.onload = updateFormatList;
