@@ -1,11 +1,17 @@
 <!DOCTYPE html>
+
 <html lang="uk">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Калькулятор перехідних піддонів</title>
-  <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport"/>
+<title>Калькулятор перехідних піддонів</title>
+<style>
     body {
+  
+  max-width: 900px;
+  margin: 20px auto;
+  box-sizing: border-box;
+  background-color: #f5f5f5;
       scroll-padding-bottom: 200px;
       font-family: sans-serif;
       padding: 15px;
@@ -59,12 +65,8 @@
       border-radius: 4px;
       padding: 0;
     }
-    .save-btn {
-      background-color: #007bff;
-    }
-    .delete-btn {
-      background-color: #dc3545;
-    }
+    
+    
     button {
       width: 100%;
       margin-top: 10px;
@@ -83,56 +85,62 @@
     .step {
       margin-top: 10px;
     }
-  </style>
-
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  <link rel="apple-touch-icon" href="icon-192.png">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Піддони">
-
-</head>
+  
+    .save-btn, .delete-btn {
+        background: none !important;
+        box-shadow: none !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+    </style>
+<link href="manifest.json" rel="manifest"/>
+<meta content="#ffffff" name="theme-color"/>
+<link href="icon-192.png" rel="apple-touch-icon"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="default" name="apple-mobile-web-app-status-bar-style"/>
+<meta content="Піддони" name="apple-mobile-web-app-title"/>
+<meta content="https://dmytrok1994.github.io/-/roshen-logo.jpeg" property="og:image"/></head>
 <body>
-
 <div class="header">
-  <img src="roshen-logo.jpeg" alt="Roshen Logo" class="logo">
-  <h2>Калькулятор<br>перехідних піддонів</h2>
-</div>
-
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;"></div>
+<h2 style="color: #8B0000; text-align: center; margin-top: 50px; font-weight: bold; font-size: 24px; padding-bottom: 8px; border-bottom: 1.5px solid #8B0000; width: 100%;">КАЛЬКУЛЯТОР ПІДДОНІВ</h2></div>
 <label>Назва формату:</label>
 <div class="inline">
-  <input id="formatName" placeholder="Наприклад: 72г-22-182">
-  <button class="icon-button save-btn" onclick="saveFormat()">💾</button>
+<input id="formatName" placeholder="Наприклад: 72г-22-182"/>
+<button class="icon-button save-btn" onclick="saveFormat()">💾</button>
 </div>
-
 <label>Оберіть збережений формат:</label>
 <div class="inline">
-  <select id="savedFormats" onchange="loadFormat()">
-    <option>-- Не обрано --</option>
-  </select>
-  <button class="icon-button delete-btn" onclick="deleteFormat()">🗑️</button>
+<select id="savedFormats" onchange="loadFormat()">
+<option>-- Не обрано --</option>
+</select>
+<button class="icon-button delete-btn" onclick="deleteFormat()">🗑️</button>
 </div>
-
 <label>Коробок у піддоні:</label>
-<input type="number" id="boxesPerPallet" />
-
+<input id="boxesPerPallet" type="number"/>
 <label>Пачок у коробці:</label>
-<input type="number" id="packsPerBox" />
-
+<input id="packsPerBox" type="number"/>
 <label>Вага однієї пачки (грам):</label>
-<input type="number" id="packWeightGrams" />
-
-<label>Коробок цієї зміни, які вже в перехідному піддоні:</label>
-<input type="number" id="transitionBoxes" value="0" />
-
+<input id="packWeightGrams" type="number"/>
+<label>Коробок цієї зміни,
+які вже в перехідному піддоні:</label>
+<input id="transitionBoxes" type="number"/>
 <label>План (кг):</label>
-<input type="number" id="planKg" step="0.01" />
-
+<input id="planKg" step="0.01" type="number"/>
 <button onclick="calculate()">Розрахувати</button>
-
-<div id="result"></div>
-
+<div id="result"></div><h1 style="font-size: 28px; margin-bottom: 5px; color: #8B0000; text-align: center; width: 100%;">ROSHEN</h1><div style="text-align: center; font-size: 14px; color: #333; margin-bottom: 15px;">Інструмент для розрахунку повних та перехідних піддонів за планом і форматом виробництва.</div><div style="text-align: center; font-size: 14px; color: #333; margin-bottom: 15px;">Натисніть кнопку нижче, щоб оновити сторінку та завантажити останню версію калькулятора. Збережені формати залишаться без змін.</div><button onclick="refreshPage()" style="margin-top: 10px; background-color: #6c757d; color: white; border: none; border-radius: 5px; padding: 10px 15px; font-size: 16px;">🔄 Оновити сторінку</button><div style="margin-top: 40px; padding: 20px; background-color: #ffffff; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; line-height: 1.6;"><div style="margin-bottom: 25px;">
+<b>📱 Інструкція для iPhone (Safari):</b><br/>
+1. Відкрий посилання в Safari: <a href="https://dmytrok1994.github.io/-/index.html" target="_blank">https://dmytrok1994.github.io/-/index.html</a><br/>
+2. Натисни кнопку “Поділитися” (⬆️ в квадраті) внизу екрана.<br/>
+3. Обери “На екран «Додому»”.<br/>
+4. Підтверди додавання іконки.
+</div><div>
+<b>🤖 Інструкція для Android (Chrome):</b><br/>
+1. Відкрий сайт у Chrome: <a href="https://dmytrok1994.github.io/-/index.html" target="_blank">https://dmytrok1994.github.io/-/index.html</a><br/>
+2. Натисни меню (⋮) у правому верхньому куті.<br/>
+3. Обери “Додати на головний екран”.<br/>
+4. Підтверди — і ярлик зʼявиться на екрані.
+</div></div>
 <script>
 function saveFormat() {
   const name = document.getElementById("formatName").value;
@@ -219,8 +227,6 @@ function calculate() {
 
 window.onload = updateFormatList;
 </script>
-
-
 <script>
   const CURRENT_VERSION = '2025-05-18-18h';
   const lastVersion = localStorage.getItem('app_version');
@@ -229,8 +235,6 @@ window.onload = updateFormatList;
     location.reload(true);
   }
 </script>
-
-
 <script>
 document.addEventListener('touchstart', function preventZoom(e) {
   if (e.touches.length > 1) {
@@ -238,6 +242,11 @@ document.addEventListener('touchstart', function preventZoom(e) {
   }
 }, { passive: false });
 </script>
-
-</body>
+<script>
+function refreshPage() {
+  if (confirm("Оновити сторінку? Збережені формати залишаться.")) {
+    location.reload(true);
+  }
+}
+</script></body>
 </html>
